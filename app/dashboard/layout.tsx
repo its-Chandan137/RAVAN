@@ -4,15 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CheckSquare, ScrollText, BarChart3, Settings, LogOut, Menu, X, Flame
-} from "lucide-react";
+import { Activity, BarChart3, BookOpen, Flame, LayoutDashboard, LogOut, Menu, Moon, Settings, Sun, X } from "lucide-react";
 import { logout, checkSession } from "@/lib/auth";
 
 const nav = [
-  { href: "/dashboard/daily", label: "Daily Tracker", icon: CheckSquare },
-  { href: "/dashboard/philosophy", label: "Ravana Philosophy", icon: ScrollText },
-  { href: "/dashboard/weekly", label: "Weekly Progress", icon: BarChart3 },
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/daily", label: "Daily practice", icon: Activity },
+  { href: "/dashboard/weekly", label: "Weekly progress", icon: BarChart3 },
+  { href: "/dashboard/philosophy", label: "Ravana philosophy", icon: BookOpen },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -21,119 +20,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
+  useEffect(() => { checkSession().then((ok) => { if (!ok) router.replace("/login"); else setReady(true); }); }, [router]);
   useEffect(() => {
-    checkSession().then((ok) => {
-      if (!ok) router.replace("/login");
-      else setReady(true);
-    });
-  }, [router]);
-
-  async function handleLogout() {
-    await logout();
-    router.replace("/login");
-    router.refresh();
+    const saved = window.localStorage.getItem("ravan-theme");
+    const nextTheme = saved === "dark" ? "dark" : "light";
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+  }, []);
+  function toggleTheme() {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem("ravan-theme", nextTheme);
   }
+  async function handleLogout() { await logout(); router.replace("/login"); router.refresh(); }
 
-  if (!ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gold font-display text-2xl animate-pulse">Entering Lanka...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex">
-      {/* Sidebar desktop */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-bg2/60 backdrop-blur sticky top-0 h-screen">
-        <SidebarContent pathname={pathname} onLogout={handleLogout} />
-      </aside>
-
-      {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 bg-bg2/90 backdrop-blur border-b border-border">
-        <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-gold" />
-          <span className="font-display text-gold tracking-widest">RAVAN</span>
-        </div>
-        <button onClick={() => setMobileOpen(true)} className="text-gold">
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 z-40 bg-black/60"
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
-              transition={{ type: "spring", damping: 25 }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-bg2 border-r border-border flex flex-col"
-            >
-              <div className="flex justify-end p-3">
-                <button onClick={() => setMobileOpen(false)} className="text-gold"><X className="w-5 h-5" /></button>
-              </div>
-              <SidebarContent pathname={pathname} onLogout={handleLogout} onNavigate={() => setMobileOpen(false)} />
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      <main className="flex-1 min-w-0 pt-14 lg:pt-0">
-        <div className="max-w-7xl mx-auto p-4 lg:p-8">{children}</div>
-      </main>
-    </div>
-  );
+  if (!ready) return <div className="loading-screen"><Flame size={22} /> <span>Entering Lanka…</span></div>;
+  return <div className="app-shell">
+    <aside className="desktop-sidebar"><Brand /><SidebarContent pathname={pathname} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} /></aside>
+    <header className="mobile-header"><Link href="/dashboard" className="mobile-brand"><Brand compact /></Link><div className="mobile-header-actions"><ThemeButton theme={theme} onToggle={toggleTheme} /><button className="mobile-menu-button" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Menu size={22} /></button></div></header>
+    <AnimatePresence>{mobileOpen && <>
+      <motion.button aria-label="Close navigation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mobile-scrim" onClick={() => setMobileOpen(false)} />
+      <motion.aside initial={{ x: -310 }} animate={{ x: 0 }} exit={{ x: -310 }} transition={{ type: "spring", damping: 27 }} className="mobile-drawer"><div className="drawer-top"><Brand /><button aria-label="Close menu" onClick={() => setMobileOpen(false)}><X size={20} /></button></div><SidebarContent pathname={pathname} onLogout={handleLogout} onNavigate={() => setMobileOpen(false)} theme={theme} onToggleTheme={toggleTheme} /></motion.aside>
+    </>}</AnimatePresence>
+    <main className="app-main"><div className="main-content">{children}</div></main>
+    <nav className="mobile-tabbar" aria-label="Primary navigation">{nav.slice(0, 4).map(({ href, label, icon: Icon }) => { const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href); return <Link key={href} href={href} className={active ? "active" : ""}><Icon size={19} /><span>{label === "Daily practice" ? "Daily" : label === "Weekly progress" ? "Weekly" : label === "Overview" ? "Home" : "Wisdom"}</span></Link>; })}</nav>
+  </div>;
 }
 
-function SidebarContent({ pathname, onLogout, onNavigate }: { pathname: string; onLogout: () => void; onNavigate?: () => void }) {
-  return (
-    <>
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full border border-gold flex items-center justify-center pulse-gold">
-            <Flame className="w-5 h-5 text-gold" />
-          </div>
-          <div>
-            <h2 className="font-display text-xl text-gold tracking-widest">RAVAN</h2>
-            <p className="text-muted text-[10px] tracking-[0.2em] uppercase">Path to Mastery</p>
-          </div>
-        </div>
-      </div>
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-        {nav.map((item) => {
-          const active = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                active
-                  ? "bg-gold/15 text-gold border border-gold/30"
-                  : "text-text/80 hover:bg-bg3 hover:text-gold"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="p-3 border-t border-border">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted hover:text-crimson-light hover:bg-crimson/10 transition-all"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </>
-  );
+function Brand({ compact = false }: { compact?: boolean }) { return <div className={`brand-lockup ${compact ? "compact" : ""}`}><span className="brand-symbol"><Flame size={21} strokeWidth={1.7} /></span><span><strong>RAVAN</strong><small>THE PATH TO MASTERY</small></span></div>; }
+
+function SidebarContent({ pathname, onLogout, onNavigate, theme, onToggleTheme }: { pathname: string; onLogout: () => void; onNavigate?: () => void; theme: "light" | "dark"; onToggleTheme: () => void }) {
+  return <><nav className="side-nav">{nav.map(({ href, label, icon: Icon }) => {
+    const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+    return <Link key={href} href={href} onClick={onNavigate} className={active ? "active" : ""}><Icon size={18} strokeWidth={1.8} /><span>{label}</span>{active && <i />}</Link>;
+  })}</nav><div className="sidebar-footer"><div className="sidebar-quote">“The mind is everything.<br />What you think, you become.”<span>— The practice</span></div><ThemeButton theme={theme} onToggle={onToggleTheme} /><button onClick={onLogout} className="logout-link"><LogOut size={16} /> Sign out</button></div></>;
 }
+
+function ThemeButton({ theme, onToggle }: { theme: "light" | "dark"; onToggle: () => void }) { const Icon = theme === "dark" ? Sun : Moon; return <button className="theme-toggle" onClick={onToggle} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}><Icon size={16} /><span>{theme === "dark" ? "Light mode" : "Dark mode"}</span><i className={theme === "dark" ? "on" : ""} /></button>; }

@@ -116,7 +116,7 @@ export default function PhilosophyPage() {
         <ul className="space-y-1">
           <Bullet>Develop a small team.</Bullet>
           <Bullet>Mentor developers.</Bullet>
-          <Bullet>Help other people's careers.</Bullet>
+          <Bullet>Help other people&apos;s careers.</Bullet>
           <Bullet>Become someone whose judgment people trust.</Bullet>
         </ul>
       </Section>

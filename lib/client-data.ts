@@ -65,7 +65,7 @@ export async function updateActivity(id: string, patch: Partial<{ name: string; 
     }
     throw new Error("Activity not found");
   }
-  const body: any = {};
+  const body: Record<string, unknown> = {};
   if (patch.name !== undefined) body.name = patch.name;
   if (patch.category !== undefined) body.category = patch.category;
   if (patch.time !== undefined) body.time_label = patch.time;
