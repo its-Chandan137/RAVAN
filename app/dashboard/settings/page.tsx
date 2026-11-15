@@ -12,6 +12,10 @@ import {
 import { logout } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -31,8 +35,8 @@ export default function SettingsPage() {
     try {
       const a = await fetchActivities();
       setActivities(a.length ? a : DEFAULT_ACTIVITIES);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Failed to load"));
     } finally {
       setLoading(false);
     }
@@ -54,8 +58,8 @@ export default function SettingsPage() {
       setEditingId(null);
       setEditDraft({});
       setMsg("Activity updated.");
-    } catch (e: any) {
-      setError(e?.message || "Save failed");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Save failed"));
     } finally {
       setSaving(false);
     }
@@ -72,8 +76,8 @@ export default function SettingsPage() {
       await deleteActivity(id);
       setActivities((prev) => prev.filter((a) => a.id !== id));
       setMsg("Activity deleted.");
-    } catch (e: any) {
-      setError(e?.message || "Delete failed");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Delete failed"));
     }
   }
 
@@ -81,8 +85,8 @@ export default function SettingsPage() {
     try {
       const updated = await updateActivity(a.id, { enabled: !a.enabled });
       setActivities((prev) => prev.map((x) => (x.id === a.id ? updated : x)));
-    } catch (e: any) {
-      setError(e?.message || "Update failed");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Update failed"));
     }
   }
 
@@ -100,8 +104,8 @@ export default function SettingsPage() {
         if (x.id === other.id) return u2;
         return x;
       }));
-    } catch (e: any) {
-      setError(e?.message || "Reorder failed");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Reorder failed"));
     }
   }
 
@@ -124,8 +128,8 @@ export default function SettingsPage() {
       setNewAct({ name: "", time: "", group: "Morning", category: "Personal Growth", points: 1 });
       setShowAdd(false);
       setMsg("Activity added.");
-    } catch (e: any) {
-      setError(e?.message || "Add failed");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Add failed"));
     } finally {
       setSaving(false);
     }
@@ -151,8 +155,8 @@ export default function SettingsPage() {
       }
       await load();
       setMsg("Default timetable restored.");
-    } catch (e: any) {
-      setError(e?.message || "Restore failed");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Restore failed"));
     }
   }
 
@@ -165,8 +169,8 @@ export default function SettingsPage() {
       }
       setActivities([]);
       setMsg("All activities deleted.");
-    } catch (e: any) {
-      setError(e?.message || "Clear failed");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Clear failed"));
     }
   }
 

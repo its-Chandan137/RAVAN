@@ -17,11 +17,11 @@ export type ActivityInput = {
 // We'll add a 'group' column via migration? Schema didn't include. Let's add group text column.
 // Update migration: add group column. For now, query assumes group column exists.
 
-export async function listActivities(): Promise<ActivityRow & { group?: string }[]> {
+export async function listActivities(): Promise<(ActivityRow & { group?: string })[]> {
   const sb = getSupabaseServer();
   const { data, error } = await sb.from("activities").select("*").order("sort_order", { ascending: true });
   if (error) throw error;
-  return (data || []) as any;
+  return (data || []) as unknown as (ActivityRow & { group?: string })[];
 }
 
 export async function createActivity(input: { name: string; category: string; time_label: string | null; points: number; group: string; sort_order: number; is_active: boolean }) {

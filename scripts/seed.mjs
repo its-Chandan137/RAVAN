@@ -47,7 +47,7 @@ try {
       ["e7","Wind down","Rest","Evening","12:00–12:20",1,true,6],
       ["e8","Sleep target","Rest","Evening","12:20",1,true,7],
     ];
-    for (const [_id, name, category, group, time, points, active, order] of defaults) {
+    for (const [, name, category, group, time, points, active, order] of defaults) {
       await client.query(
         `insert into public.activities (name, category, group_name, time_label, points, is_active, sort_order, schedule_days)
          values ($1,$2,$3,$4,$5,$6,$7,'{0,1,2,3,4,5,6}')`,

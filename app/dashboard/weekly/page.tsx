@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import type { Activity } from "@/lib/ravan";
 import {
@@ -41,7 +41,7 @@ export default function WeeklyPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const days = weekDays(viewWeek);
+  const days = useMemo(() => weekDays(viewWeek), [viewWeek]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +49,7 @@ export default function WeeklyPage() {
       .then((l) => { if (!cancelled) setLogs(l); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [viewWeek]);
+  }, [days]);
 
   const enabled = enabledActivities(activities);
   const logMap = useMemo(() => logsToMap(logs), [logs]);
