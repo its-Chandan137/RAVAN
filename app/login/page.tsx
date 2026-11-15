@@ -68,6 +68,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submit()}
                 className="input-field pl-10 pr-10"
+                style={{paddingLeft: "40px"}}
                 placeholder="••••••••"
                 autoFocus
               />
